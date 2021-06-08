@@ -1,0 +1,64 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+dataset <- read.csv("CarPrice_Assignment.csv")
+library(dplyr)
+library(tidyr)
+library(skimr)
+library(rsample)
+library(recipes)
+library(ggplot2)
+library(corrr)
+library(parsnip)
+library(caTools)
+```
+
+```{r}
+skim(dataset)
+```
+```{r}
+real_dataset<- select(dataset,-CarName)
+```
+
+```{r}
+data_rec<-data_train%>%
+  recipe(price ~ .,data_train)%>%
+  step_dummy(all_nominal())%>%
+  step_normalize(all_numeric(),-all_outcomes())%>%
+  prep()
+
+juiced<- juice(data_rec)
+```
+```{r}
+data_split<- initial_split(real_dataset, starta=price)
+data_train<- training(data_split)
+data_test<- testing(data_split)
+```
+
+```{r}
+lm_model<-linear_reg()%>%
+  set_engine("lm")%>%
+  set_mode("regression")
+
+```
+
+```{r}
+lm_fit<- fit(lm_model,price~ .,juiced)
+```
+
+```{r}
+result_train<-lm_fit%>%
+  predict(new_data=juiced)%>%
+  mutate(truth=data_train$price)
+results_test<- lm_fit%>%
+  predict(new_data=bake(data_rec, data_test))%>%
+  mutate(truth=data_test$price)
+
+```
+```{r}
+
+```
+
